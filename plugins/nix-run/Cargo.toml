@@ -1,0 +1,18 @@
+[package]
+name = "nix-run"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyrun-plugin = { path = "../../anyrun-plugin" }
+abi_stable = "0.11.1"
+sublime_fuzzy = "0.7.0"
+fuzzy-matcher = "0.3.7"
+regex = "1.9.3"
+ron = "0.8.0"
+serde = { version = "1.0.159", features = ["derive"] }
