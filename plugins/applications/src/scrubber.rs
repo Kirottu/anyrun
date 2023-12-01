@@ -12,6 +12,7 @@ pub struct DesktopEntry {
     pub icon: String,
     pub term: bool,
     pub offset: i64,
+    pub ignored: bool,
 }
 
 const FIELD_CODE_LIST: &[&str] = &[
@@ -50,6 +51,7 @@ impl DesktopEntry {
             }
 
             let mut ret = Vec::new();
+            let mut ignored = false;
 
             let entry = match new_sections.iter().find_map(|section| {
                 if section[0].starts_with("[Desktop Entry]") {
@@ -61,12 +63,17 @@ impl DesktopEntry {
                         }
                     }
 
-                    if map.get("Type")? == &"Application"
-                        && match map.get("NoDisplay") {
-                            Some(no_display) => !no_display.parse::<bool>().unwrap_or(true),
-                            None => true,
-                        }
-                    {
+                    let no_display = map
+                        .get("NoDisplay")
+                        .and_then(|no_display| no_display.parse::<bool>().ok())
+                        .unwrap_or(false);
+                    let hidden = map
+                        .get("Hidden")
+                        .and_then(|hidden| hidden.parse::<bool>().ok())
+                        .unwrap_or(false);
+                    ignored = hidden || no_display;
+
+                    if map.get("Type")? == &"Application" {
                         Some(DesktopEntry {
                             exec: {
                                 let mut exec = map.get("Exec")?.to_string();
@@ -97,6 +104,7 @@ impl DesktopEntry {
                                 .map(|val| val.to_lowercase() == "true")
                                 .unwrap_or(false),
                             offset: 0,
+                            ignored,
                         })
                     } else {
                         None
@@ -153,6 +161,7 @@ impl DesktopEntry {
                                 .map(|val| val.to_lowercase() == "true")
                                 .unwrap_or(false),
                             offset: i as i64,
+                            ignored,
                         })
                     }
                 }
@@ -246,6 +255,7 @@ pub fn scrubber(config: &Config) -> Result<Vec<(DesktopEntry, u64)>, Box<dyn std
 
     Ok(entries
         .into_iter()
+        .filter(|(_, entry)| !entry.ignored)
         .enumerate()
         .map(|(i, (_, entry))| (entry, i as u64))
         .collect())
