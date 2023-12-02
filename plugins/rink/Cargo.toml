@@ -11,5 +11,7 @@ crate-type = ["cdylib"]
 [dependencies]
 anyrun-plugin = { path = "../../anyrun-plugin" }
 abi_stable = "0.11.1"
-rink-core = "0.6"
 reqwest = { version = "0.11.13", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+rink-core = "0.6"
+ron = "0.8.0"
+serde = { version = "1.0.159", features = ["derive"] }
