@@ -19,5 +19,7 @@ Config(
   // The terminal used for running terminal based desktop entries, if left as `None` a static list of terminals is used
   // to determine what terminal to use.
   terminal: Some("alacritty"),
+  // The history size for the application history, set to 0 to disable history
+  history_size: 50,
 )
 ```
