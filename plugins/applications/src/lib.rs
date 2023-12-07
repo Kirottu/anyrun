@@ -65,11 +65,19 @@ pub fn handler(selection: Match, state: &State) -> HandleResult {
                 }
             }
         }
-    } else if let Err(why) = Command::new("sh")
-        .arg("-c")
-        .arg(&entry.exec)
-        .current_dir(entry.path.as_ref().unwrap_or(&env::current_dir().unwrap()))
-        .spawn()
+    } else if let Err(why) = {
+        let current_dir = &env::current_dir().unwrap();
+
+        Command::new("sh")
+            .arg("-c")
+            .arg(&entry.exec)
+            .current_dir(if let Some(path) = &entry.path {
+                if path.exists() { path } else { current_dir }
+            } else {
+                current_dir
+            })
+            .spawn()
+    }
     {
         eprintln!("Error running desktop entry: {}", why);
     }
