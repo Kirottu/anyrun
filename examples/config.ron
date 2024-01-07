@@ -36,6 +36,14 @@ Config(
   // Limit amount of entries shown in total
   max_entries: None,
   
+  // Key Bindings For anyrun actions
+  // Modifier keys come first, followed by the key itself in a string.
+  // Multiple bindings can be set for the same action, e.g. `binding_up: ["Up", "Shift Tab", "Alt k"]`
+  binding_close: ["Escape"],
+  binding_up: ["Up", "Shift Tab"],
+  binding_down: ["Down", "Tab"],
+  binding_select: ["Return"],
+
   // List of plugins to be loaded by default, can be specified with a relative path to be loaded from the
   // `<anyrun config dir>/plugins` directory or with an absolute path to just load the file the path points to.
   plugins: [
@@ -45,3 +53,4 @@ Config(
     "libtranslate.so",
   ],
 )
+

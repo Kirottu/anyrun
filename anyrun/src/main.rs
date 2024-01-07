@@ -49,8 +49,16 @@ struct Config {
     max_entries: Option<usize>,
     #[serde(default = "Config::default_layer")]
     layer: Layer,
-}
 
+    #[serde(default = "Config::default_binding_close")]
+    binding_close: Vec<String>,
+    #[serde(default = "Config::default_binding_up")]
+    binding_up: Vec<String>,
+    #[serde(default = "Config::default_binding_down")]
+    binding_down: Vec<String>,
+    #[serde(default = "Config::default_binding_select")]
+    binding_select: Vec<String>,
+}
 impl Config {
     fn default_x() -> RelativeNum {
         RelativeNum::Fraction(0.5)
@@ -80,6 +88,19 @@ impl Config {
     fn default_layer() -> Layer {
         Layer::Overlay
     }
+
+    fn default_binding_close() -> Vec<String> {
+        vec!["Escape".into()]
+    }
+    fn default_binding_up() -> Vec<String> {
+        vec!["Up".into(), "Shift Tab".into()]
+    }
+    fn default_binding_down() -> Vec<String> {
+        vec!["Down".into(), "Tab".into()]
+    }
+    fn default_binding_select() -> Vec<String> {
+        vec!["Return".into()]
+    }
 }
 
 impl Default for Config {
@@ -97,6 +118,10 @@ impl Default for Config {
             show_results_immediately: false,
             max_entries: None,
             layer: Self::default_layer(),
+            binding_close: Self::default_binding_close(),
+            binding_up: Self::default_binding_up(),
+            binding_down: Self::default_binding_down(),
+            binding_select: Self::default_binding_select(),
         }
     }
 }
@@ -472,146 +497,151 @@ fn activate(app: &gtk::Application, runtime_data: Rc<RefCell<RuntimeData>>) {
     });
 
     // Handle other key presses for selection control and all other things that may be needed
+    let binding_close = rearrange_key_vectors(runtime_data.borrow().config.binding_close.clone());
+    let binding_up = rearrange_key_vectors(runtime_data.borrow().config.binding_up.clone());
+    let binding_down = rearrange_key_vectors(runtime_data.borrow().config.binding_down.clone());
+    let binding_select = rearrange_key_vectors(runtime_data.borrow().config.binding_select.clone());
+
     let entry_clone = entry.clone();
     let runtime_data_clone = runtime_data.clone();
 
     window.connect_key_press_event(move |window, event| {
-        use gdk::keys::constants;
-        match event.keyval() {
-            // Close window on escape
-            constants::Escape => {
-                window.close();
-                Inhibit(true)
-            }
-            // Handle selections
-            constants::Down | constants::Tab | constants::Up => {
-                // Combine all of the matches into a `Vec` to allow for easier handling of the selection
-                let combined_matches = runtime_data_clone
-                    .borrow()
-                    .plugins
-                    .iter()
-                    .flat_map(|view| {
-                        view.list.children().into_iter().map(|child| {
-                            (
-                                // All children of lists are GtkListBoxRow widgets
-                                child.dynamic_cast::<gtk::ListBoxRow>().unwrap(),
-                                view.list.clone(),
-                            )
-                        })
+        let result_key =
+            rearrange_keys(&event.keyval().name().unwrap(), &event.state().to_string());
+
+        // Close window
+        if binding_close.contains(&result_key) {
+            window.close();
+            Inhibit(true)
+        }
+        // Handle selections
+        else if [binding_up.clone(), binding_down.clone()]
+            .concat()
+            .contains(&result_key)
+        {
+            // Combine all of the matches into a `Vec` to allow for easier handling of the selection
+            let combined_matches = runtime_data_clone
+                .borrow()
+                .plugins
+                .iter()
+                .flat_map(|view| {
+                    view.list.children().into_iter().map(|child| {
+                        (
+                            // All children of lists are GtkListBoxRow widgets
+                            child.dynamic_cast::<gtk::ListBoxRow>().unwrap(),
+                            view.list.clone(),
+                        )
                     })
-                    .collect::<Vec<(gtk::ListBoxRow, gtk::ListBox)>>();
+                })
+                .collect::<Vec<(gtk::ListBoxRow, gtk::ListBox)>>();
 
-                // Get the selected match
-                let (selected_match, selected_list) =
-                    match runtime_data_clone.borrow().plugins.iter().find_map(|view| {
-                        view.list.selected_row().map(|row| (row, view.list.clone()))
-                    }) {
-                        Some(selected) => selected,
-                        None => {
-                            // If nothing is selected select either the top or bottom match based on the input
-                            if !combined_matches.is_empty() {
-                                match event.keyval() {
-                                    constants::Down | constants::Tab => combined_matches[0]
-                                        .1
-                                        .select_row(Some(&combined_matches[0].0)),
-                                    constants::Up => {
-                                        combined_matches[combined_matches.len() - 1].1.select_row(
-                                            Some(&combined_matches[combined_matches.len() - 1].0),
-                                        )
-                                    }
-                                    _ => unreachable!(),
-                                }
-                            }
-                            return Inhibit(true);
-                        }
-                    };
-
-                // Clear the previous selection
-                selected_list.select_row(None::<&gtk::ListBoxRow>);
-
-                // Get the index of the current selection
-                let index = combined_matches
-                    .iter()
-                    .position(|(row, _)| *row == selected_match)
-                    .unwrap();
-
-                // Move the selection based on the input, loops from top to bottom and vice versa
-                match event.keyval() {
-                    constants::Down | constants::Tab => {
-                        if index < combined_matches.len() - 1 {
-                            combined_matches[index + 1]
-                                .1
-                                .select_row(Some(&combined_matches[index + 1].0));
-                        } else {
+            // Get the selected match
+            let (selected_match, selected_list) = match runtime_data_clone
+                .borrow()
+                .plugins
+                .iter()
+                .find_map(|view| view.list.selected_row().map(|row| (row, view.list.clone())))
+            {
+                Some(selected) => selected,
+                None => {
+                    // If nothing is selected select either the top or bottom match based on the input
+                    if !combined_matches.is_empty() {
+                        if binding_down.contains(&result_key) {
                             combined_matches[0]
                                 .1
-                                .select_row(Some(&combined_matches[0].0));
-                        }
-                    }
-                    constants::Up => {
-                        if index > 0 {
-                            combined_matches[index - 1]
-                                .1
-                                .select_row(Some(&combined_matches[index - 1].0));
-                        } else {
+                                .select_row(Some(&combined_matches[0].0))
+                        } else if binding_up.contains(&result_key) {
                             combined_matches[combined_matches.len() - 1]
                                 .1
-                                .select_row(Some(&combined_matches[combined_matches.len() - 1].0));
+                                .select_row(Some(&combined_matches[combined_matches.len() - 1].0))
                         }
                     }
-                    _ => unreachable!(),
+                    return Inhibit(true);
                 }
+            };
 
-                Inhibit(true)
-            }
-            // Handle when the selected match is "activated"
-            constants::Return => {
-                let mut _runtime_data_clone = runtime_data_clone.borrow_mut();
+            // Clear the previous selection
+            selected_list.select_row(None::<&gtk::ListBoxRow>);
 
-                let (selected_match, plugin_view) = match _runtime_data_clone
-                    .plugins
-                    .iter()
-                    .find_map(|view| view.list.selected_row().map(|row| (row, view)))
-                {
-                    Some(selected) => selected,
-                    None => {
-                        return Inhibit(false);
-                    }
-                };
+            // Get the index of the current selection
+            let index = combined_matches
+                .iter()
+                .position(|(row, _)| *row == selected_match)
+                .unwrap();
 
-                // Perform actions based on the result of handling the selection
-                match plugin_view.plugin.handle_selection()(unsafe {
-                    (*selected_match.data::<Match>("match").unwrap().as_ptr()).clone()
-                }) {
-                    HandleResult::Close => {
-                        window.close();
-                        Inhibit(true)
-                    }
-                    HandleResult::Refresh(exclusive) => {
-                        if exclusive {
-                            _runtime_data_clone.exclusive = Some(plugin_view.clone());
-                        } else {
-                            _runtime_data_clone.exclusive = None;
-                        }
-                        mem::drop(_runtime_data_clone); // Drop the mutable borrow
-                        refresh_matches(entry_clone.text().into(), runtime_data_clone.clone());
-                        Inhibit(false)
-                    }
-                    HandleResult::Copy(bytes) => {
-                        _runtime_data_clone.post_run_action = PostRunAction::Copy(bytes.into());
-                        window.close();
-                        Inhibit(true)
-                    }
-                    HandleResult::Stdout(bytes) => {
-                        if let Err(why) = io::stdout().lock().write_all(&bytes) {
-                            eprintln!("Error outputting content to stdout: {}", why);
-                        }
-                        window.close();
-                        Inhibit(true)
-                    }
+            // Move the selection based on the input, loops from top to bottom and vice versa
+            if binding_down.contains(&result_key) {
+                if index < combined_matches.len() - 1 {
+                    combined_matches[index + 1]
+                        .1
+                        .select_row(Some(&combined_matches[index + 1].0));
+                } else {
+                    combined_matches[0]
+                        .1
+                        .select_row(Some(&combined_matches[0].0));
+                }
+            } else if binding_up.contains(&result_key) {
+                if index > 0 {
+                    combined_matches[index - 1]
+                        .1
+                        .select_row(Some(&combined_matches[index - 1].0));
+                } else {
+                    combined_matches[combined_matches.len() - 1]
+                        .1
+                        .select_row(Some(&combined_matches[combined_matches.len() - 1].0));
                 }
             }
-            _ => Inhibit(false),
+
+            Inhibit(true)
+        }
+        // Handle when the selected match is "activated"
+        else if binding_select.contains(&result_key) {
+            let mut _runtime_data_clone = runtime_data_clone.borrow_mut();
+
+            let (selected_match, plugin_view) = match _runtime_data_clone
+                .plugins
+                .iter()
+                .find_map(|view| view.list.selected_row().map(|row| (row, view)))
+            {
+                Some(selected) => selected,
+                None => {
+                    return Inhibit(false);
+                }
+            };
+
+            // Perform actions based on the result of handling the selection
+            match plugin_view.plugin.handle_selection()(unsafe {
+                (*selected_match.data::<Match>("match").unwrap().as_ptr()).clone()
+            }) {
+                HandleResult::Close => {
+                    window.close();
+                    Inhibit(true)
+                }
+                HandleResult::Refresh(exclusive) => {
+                    if exclusive {
+                        _runtime_data_clone.exclusive = Some(plugin_view.clone());
+                    } else {
+                        _runtime_data_clone.exclusive = None;
+                    }
+                    mem::drop(_runtime_data_clone); // Drop the mutable borrow
+                    refresh_matches(entry_clone.text().into(), runtime_data_clone.clone());
+                    Inhibit(false)
+                }
+                HandleResult::Copy(bytes) => {
+                    _runtime_data_clone.post_run_action = PostRunAction::Copy(bytes.into());
+                    window.close();
+                    Inhibit(true)
+                }
+                HandleResult::Stdout(bytes) => {
+                    if let Err(why) = io::stdout().lock().write_all(&bytes) {
+                        eprintln!("Error outputting content to stdout: {}", why);
+                    }
+                    window.close();
+                    Inhibit(true)
+                }
+            }
+        } else {
+            Inhibit(false)
         }
     });
 
@@ -692,6 +722,45 @@ fn activate(app: &gtk::Application, runtime_data: Rc<RefCell<RuntimeData>>) {
 
     // Show the window initially, so it gets allocated and configured
     window.show_all();
+}
+
+// Rearrange key binding names in ascending order
+fn rearrange_keys(key: &str, modifiers: &str) -> String {
+    // Fixes to match key names
+    let mut modifier_clean = Vec::new();
+    let modifiers_copy = modifiers.replace("| ", "");
+    for modifier in modifiers_copy.split(" ").collect::<Vec<&str>>() {
+        modifier_clean.push(match modifier {
+            "Control" => "CONTROL_MASK",
+            "Shift" => "SHIFT_MASK",
+            "Mod1" => "MOD1_MASK",
+            "Mod4" => "MOD4_MASK",
+            "Alt" => "MOD1_MASK",
+            "Super" => "MOD4_MASK",
+            "(empty)" => "",
+            _ => modifier,
+        });
+    }
+    let key_clean = match key {
+        "Enter" => "Return",
+        "ISO_Left_Tab" => "Tab",
+        _ => key,
+    };
+    modifier_clean.sort();
+    (modifier_clean.join(" ") + " " + key_clean)
+        .trim()
+        .to_string()
+}
+
+// Rearrange key binding names in vectors in ascending order
+fn rearrange_key_vectors(keys: Vec<String>) -> Vec<String> {
+    let mut newkeys = Vec::new();
+    for binding in keys {
+        let (modifiers, keys) = binding.rsplit_once(" ").unwrap_or(("", &binding));
+        let newkey = rearrange_keys(keys, modifiers);
+        newkeys.push(newkey);
+    }
+    newkeys
 }
 
 fn handle_matches(plugin_view: PluginView, runtime_data: &RuntimeData, matches: RVec<Match>) {
