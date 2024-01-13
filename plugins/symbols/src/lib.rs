@@ -92,6 +92,7 @@ fn get_matches(input: RString, state: &State) -> RVec<Match> {
             description: ROption::RSome(symbol.name.clone().into()),
             use_pango: false,
             icon: ROption::RNone,
+            image: ROption::RNone,
             id: ROption::RNone,
         })
         .collect()

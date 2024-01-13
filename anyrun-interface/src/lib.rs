@@ -41,6 +41,8 @@ pub struct Match {
     pub use_pango: bool,
     /// The icon name from the icon theme in use
     pub icon: ROption<RString>,
+    /// The path to a custom image to use instead of an icon
+    pub image: ROption<RString>,
     /// For runners to differentiate between the matches. Not required.
     pub id: ROption<u64>,
 }

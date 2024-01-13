@@ -55,6 +55,7 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
                 ),
                 use_pango: false,
                 icon: ROption::RNone,
+                image: ROption::RNone,
                 id: ROption::RNone,
             }]
             .into()
