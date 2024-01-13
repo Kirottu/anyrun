@@ -76,6 +76,7 @@ The flake provides multiple packages:
 - symbols - the symbols plugin
 - translate - the translate plugin
 - websearch - the websearch plugin
+- input - the input field plugin
 
 #### home-manager module
 
