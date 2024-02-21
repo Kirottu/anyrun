@@ -25,3 +25,17 @@ Config(
   engines: [Google] 
 )
 ```
+## Notes
+This plugin relies on xdg-open and won't work without it. On NixOS, this can be installed by adding `xdg-utils` to your list of packages:
+```nix
+environment.systemPackages = with pkgs; [
+  xdg-utils
+];
+```
+
+Or, with home-manager:
+```nix
+home.packages = with pkgs; [
+  xdg-utils
+];
+```
