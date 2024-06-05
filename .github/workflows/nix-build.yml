@@ -23,7 +23,7 @@ jobs:
       - name: Check Flake
         run: nix flake check --accept-flake-config
 
-  build:
+  nix-build:
     name: "Build Exposed Packages"
     runs-on: ubuntu-latest
     needs: check-flake

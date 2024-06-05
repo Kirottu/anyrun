@@ -11,7 +11,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  cargo-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Install dependencies
-        run: nix profile install --inputs-from .#
+        run: nix develop .#
 
       - uses: actions-rs/toolchain@v1
         name: Install rust toolchain
