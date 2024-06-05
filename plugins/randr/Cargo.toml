@@ -12,6 +12,6 @@ crate-type = ["cdylib"]
 fuzzy-matcher = "0.3.7"
 anyrun-plugin = { path = "../../anyrun-plugin" }
 abi_stable = "0.11.1"
-hyprland = "0.3"
+hyprland = "0.4.0-alpha.1"
 ron = "0.8.0"
 serde = { version = "1.0.160", features = ["derive"] }
