@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "abi_stable"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "467388fe07f5a809f4df42226142cadd5a7706810b76a0896fd68d156b1ea886"
+checksum = "69d6512d3eb05ffe5004c59c206de7f99c34951504056ce23fc953842f12c445"
 dependencies = [
  "abi_stable_derive",
  "abi_stable_shared",
@@ -149,8 +149,8 @@ name = "anyrun"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-interface",
- "anyrun-macros",
+ "anyrun-interface 0.1.0",
+ "anyrun-macros 0.1.0",
  "clap",
  "gtk",
  "gtk-layer-shell",
@@ -168,8 +168,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyrun-interface"
+version = "0.1.0"
+source = "git+https://github.com/Kirottu/anyrun#e14da6c37337ffa3ee1bc66965d58ef64c1590e5"
+dependencies = [
+ "abi_stable",
+]
+
+[[package]]
 name = "anyrun-macros"
 version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.29",
+]
+
+[[package]]
+name = "anyrun-macros"
+version = "0.1.0"
+source = "git+https://github.com/Kirottu/anyrun#e14da6c37337ffa3ee1bc66965d58ef64c1590e5"
 dependencies = [
  "quote",
  "syn 2.0.29",
@@ -180,8 +197,18 @@ name = "anyrun-plugin"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-interface",
- "anyrun-macros",
+ "anyrun-interface 0.1.0",
+ "anyrun-macros 0.1.0",
+]
+
+[[package]]
+name = "anyrun-plugin"
+version = "0.1.0"
+source = "git+https://github.com/Kirottu/anyrun#e14da6c37337ffa3ee1bc66965d58ef64c1590e5"
+dependencies = [
+ "abi_stable",
+ "anyrun-interface 0.1.0 (git+https://github.com/Kirottu/anyrun)",
+ "anyrun-macros 0.1.0 (git+https://github.com/Kirottu/anyrun)",
 ]
 
 [[package]]
@@ -189,7 +216,7 @@ name = "applications"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "fuzzy-matcher",
  "ron",
  "serde",
@@ -515,7 +542,7 @@ name = "dictionary"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "reqwest",
  "ron",
  "serde",
@@ -1160,6 +1187,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "input"
+version = "0.1.0"
+dependencies = [
+ "abi_stable",
+ "anyrun-plugin 0.1.0 (git+https://github.com/Kirottu/anyrun)",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1196,7 +1231,7 @@ name = "kidex"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "fuzzy-matcher",
  "kidex-common",
  "open",
@@ -1633,7 +1668,7 @@ name = "randr"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "fuzzy-matcher",
  "hyprland",
  "ron",
@@ -1746,7 +1781,7 @@ name = "rink"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "reqwest",
  "rink-core",
 ]
@@ -1939,7 +1974,7 @@ name = "shell"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "ron",
  "serde",
 ]
@@ -2005,7 +2040,7 @@ name = "stdin"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "fuzzy-matcher",
  "ron",
  "serde",
@@ -2050,7 +2085,7 @@ name = "symbols"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "fuzzy-matcher",
  "ron",
  "serde",
@@ -2285,7 +2320,7 @@ name = "translate"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "futures",
  "fuzzy-matcher",
  "reqwest",
@@ -2578,7 +2613,7 @@ name = "websearch"
 version = "0.1.0"
 dependencies = [
  "abi_stable",
- "anyrun-plugin",
+ "anyrun-plugin 0.1.0",
  "ron",
  "serde",
  "strum",
