@@ -10,6 +10,7 @@ pub struct Config {
     desktop_actions: bool,
     max_entries: usize,
     terminal: Option<String>,
+    history_size: usize,     
 }
 
 impl Default for Config {
@@ -18,21 +19,24 @@ impl Default for Config {
             desktop_actions: false,
             max_entries: 5,
             terminal: None,
+            history_size: 50,
         }
     }
 }
 
 pub struct State {
-    config: Config,
+    config: Config,    
     entries: Vec<(DesktopEntry, u64)>,
+    history: history::History, 
 }
 
 mod scrubber;
+mod history;
 
 const SENSIBLE_TERMINALS: &[&str] = &["alacritty", "foot", "kitty", "wezterm", "wterm"];
 
 #[handler]
-pub fn handler(selection: Match, state: &State) -> HandleResult {
+pub fn handler(selection: Match, state: &mut State) -> HandleResult {
     let entry = state
         .entries
         .iter()
@@ -82,6 +86,11 @@ pub fn handler(selection: Match, state: &State) -> HandleResult {
         eprintln!("Error running desktop entry: {}", why);
     }
 
+    state.history.add_entry(entry.clone());
+    state.history.truncate(state.config.history_size);
+    state.history.write();
+
+
     HandleResult::Close
 }
 
@@ -103,11 +112,15 @@ pub fn init(config_dir: RString) -> State {
         Vec::new()
     });
 
-    State { config, entries }
+    let history = history::History::load();
+    println!("Loaded {} history entries", history.count());
+
+    State { config, entries, history }
 }
 
 #[get_matches]
 pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
+
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
     let mut entries = state
         .entries
@@ -124,9 +137,18 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 .keywords
                 .iter()
                 .map(|keyword| matcher.fuzzy_match(keyword, &input).unwrap_or(0))
-                .sum::<i64>();
+                .sum::<i64>();   
 
-            let mut score = (app_score * 25 + keyword_score) - entry.offset;
+            let history_score = state.history.get_entry_info(entry).map(|(index, count)| {                
+                let recency_bias = i64::max(5-index as i64, 0);
+                (count as i64 + recency_bias) * 20
+            }).unwrap_or(0);
+
+            if app_score + keyword_score == 0 {
+                return None;
+            }
+
+            let mut score = (app_score * 25 + keyword_score + history_score) - entry.offset;
 
             // prioritize actions
             if entry.desc.is_some() {
@@ -143,17 +165,17 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
     entries.sort_by(|a, b| b.2.cmp(&a.2));
 
-    entries.truncate(state.config.max_entries);
+    entries.truncate(state.config.max_entries);    
     entries
-        .into_iter()
-        .map(|(entry, id, _)| Match {
-            title: entry.name.clone().into(),
-            description: entry.desc.clone().map(|desc| desc.into()).into(),
-            use_pango: false,
-            icon: ROption::RSome(entry.icon.clone().into()),
-            id: ROption::RSome(id),
-        })
-        .collect()
+    .into_iter()
+    .map(|(entry, id, _)| Match {
+        title: entry.name.clone().into(),
+        description: entry.desc.clone().map(|desc| desc.into()).into(),
+        use_pango: false,
+        icon: ROption::RSome(entry.icon.clone().into()),
+        id: ROption::RSome(id),
+    })
+    .collect()
 }
 
 #[info]

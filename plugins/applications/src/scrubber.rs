@@ -1,8 +1,10 @@
 use std::{collections::HashMap, env, ffi::OsStr, fs, path::PathBuf};
 
+use serde::{Deserialize, Serialize};
+
 use crate::Config;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct DesktopEntry {
     pub exec: String,
     pub path: Option<PathBuf>,
