@@ -35,7 +35,7 @@ fn init(config_dir: RString) -> State {
 
     State {
         config,
-        lines: stdin().lines().filter_map(|line| line.ok()).collect(),
+        lines: stdin().lines().map_while(Result::ok).collect(),
     }
 }
 
@@ -68,12 +68,36 @@ fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
     lines
         .into_iter()
-        .map(|(line, _)| Match {
-            title: line.into(),
-            description: ROption::RNone,
-            use_pango: false,
-            icon: ROption::RNone,
-            id: ROption::RNone,
+        .map(|(line, _)| {
+            let mut line = line.split('\t');
+            let title = line.next().unwrap_or("").into();
+            let (icon, image) = line
+                .next()
+                .map_or((ROption::RNone, ROption::RNone), |second| {
+                    if second.starts_with("image:") {
+                        (
+                            ROption::RNone,
+                            ROption::RSome(
+                                second
+                                    .chars()
+                                    .skip("image:".len())
+                                    .collect::<String>()
+                                    .into(),
+                            ),
+                        )
+                    } else {
+                        (ROption::RSome(second.into()), ROption::RNone)
+                    }
+                });
+
+            Match {
+                title,
+                description: ROption::RNone,
+                use_pango: false,
+                icon,
+                image,
+                id: ROption::RNone,
+            }
         })
         .collect::<Vec<_>>()
         .into()

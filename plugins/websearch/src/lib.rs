@@ -82,6 +82,7 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
                 description: ROption::RSome(format!("Search with {}", engine).into()),
                 use_pango: false,
                 icon: ROption::RNone,
+                image: ROption::RNone,
                 id: ROption::RSome(i as u64),
             })
             .collect()

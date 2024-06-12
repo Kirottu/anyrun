@@ -50,6 +50,7 @@ fn get_matches(input: RString, ctx: &mut rink_core::Context) -> RVec<Match> {
                 description: desc.map(RString::from).into(),
                 use_pango: false,
                 icon: ROption::RNone,
+                image: ROption::RNone,
                 id: ROption::RNone,
             }]
             .into()

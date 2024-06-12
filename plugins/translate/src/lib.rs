@@ -211,7 +211,12 @@ fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
             let mut matches = src_matches
                 .into_iter()
-                .flat_map(|src| dest_matches.clone().into_iter().map(move |dest| (Some(src), dest)))
+                .flat_map(|src| {
+                    dest_matches
+                        .clone()
+                        .into_iter()
+                        .map(move |dest| (Some(src), dest))
+                })
                 .collect::<Vec<_>>();
 
             matches.sort_by(|a, b| (b.1 .2 + b.0.unwrap().2).cmp(&(a.1 .2 + a.0.unwrap().2)));
@@ -237,12 +242,12 @@ fn get_matches(input: RString, state: &State) -> RVec<Match> {
             .into_iter()
             .map(|(src, dest)| async move {
                 match src {
-                    Some(src) => 
+                    Some(src) =>
                 (dest.1, state.client.get(format!("https://translate.googleapis.com/translate_a/single?client=gtx&sl={}&tl={}&dt=t&q={}", src.0, dest.0, text)).send().await),
                     None => (dest.1, state.client.get(format!("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}", dest.0, text)).send().await)
                 }
             });
-       
+
         let res = futures::future::join_all(futures) // Wait for all futures to complete
             .await;
 
@@ -276,6 +281,7 @@ fn get_matches(input: RString, state: &State) -> RVec<Match> {
                                 .into()),
                             use_pango: false,
                             icon: ROption::RNone,
+                            image: ROption::RNone,
                             id: ROption::RNone
                         }
                     )

@@ -89,6 +89,7 @@ pub fn get_matches(input: RString, config: &Config) -> RVec<Match> {
                             description: ROption::RSome(meaning.part_of_speech.clone().into()),
                             use_pango: false,
                             icon: ROption::RSome("accessories-dictionary".into()),
+                            image: ROption::RNone,
                             id: ROption::RNone,
                         })
                         .collect::<RVec<_>>()

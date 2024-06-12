@@ -124,6 +124,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 ),
                 use_pango: false,
                 icon: ROption::RSome("object-flip-horizontal".into()),
+                image: ROption::RNone,
                 id: ROption::RSome(mon.id),
             })
             .collect::<RVec<_>>(),
@@ -150,6 +151,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                                 description: ROption::RNone,
                                 use_pango: false,
                                 icon: ROption::RSome(configure.icon().into()),
+                                image: ROption::RNone,
                                 // Store 2 32 bit IDs in the single 64 bit integer, a bit of a hack
                                 id: ROption::RSome(_mon.id << 32 | Into::<u64>::into(configure)),
                             })
@@ -165,6 +167,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 description: ROption::RNone,
                 use_pango: false,
                 icon: ROption::RSome(Configure::Zero.icon().into()),
+                image: ROption::RNone,
                 id: ROption::RSome((&Configure::Zero).into()),
             });
 
@@ -173,6 +176,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 description: ROption::RSome("Return to the previous menu".into()),
                 use_pango: false,
                 icon: ROption::RSome("edit-undo".into()),
+                image: ROption::RNone,
                 id: ROption::RSome(u64::MAX),
             });
 

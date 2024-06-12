@@ -102,6 +102,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                     use_pango: false,
                     id: ROption::RSome(IndexAction::Open as u64),
                     icon: ROption::RSome("document-open".into()),
+                    image: ROption::RNone,
                 },
                 Match {
                     title: "Copy Path".into(),
@@ -109,6 +110,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                     use_pango: false,
                     id: ROption::RSome(IndexAction::CopyPath as u64),
                     icon: ROption::RSome("edit-copy".into()),
+                    image: ROption::RNone,
                 },
                 Match {
                     title: "Back".into(),
@@ -116,6 +118,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                     use_pango: false,
                     id: ROption::RSome(IndexAction::Back as u64),
                     icon: ROption::RSome("edit-undo".into()),
+                    image: ROption::RNone,
                 },
             ]
             .into()
@@ -155,6 +158,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                     } else {
                         "text-x-generic".into()
                     }),
+                    image: ROption::RNone,
                     id: ROption::RSome(id as u64),
                 })
                 .collect()

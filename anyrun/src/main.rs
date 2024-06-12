@@ -37,6 +37,10 @@ struct Config {
 
     #[serde(default)]
     hide_icons: bool,
+    #[serde(default = "Config::default_max_image_width")]
+    max_image_width: i32,
+    #[serde(default = "Config::default_max_image_height")]
+    max_image_height: i32,
     #[serde(default)]
     hide_plugin_info: bool,
     #[serde(default)]
@@ -77,6 +81,14 @@ impl Config {
         ]
     }
 
+    fn default_max_image_width() -> i32 {
+        150
+    }
+
+    fn default_max_image_height() -> i32 {
+        100
+    }
+
     fn default_layer() -> Layer {
         Layer::Overlay
     }
@@ -91,6 +103,8 @@ impl Default for Config {
             height: Self::default_height(),
             plugins: Self::default_plugins(),
             hide_icons: false,
+            max_image_width: 150,
+            max_image_height: 100,
             hide_plugin_info: false,
             ignore_exclusive_zones: false,
             close_on_click: false,
@@ -714,7 +728,21 @@ fn handle_matches(plugin_view: PluginView, runtime_data: &RuntimeData, matches: 
             .hexpand(true)
             .build();
         if !runtime_data.config.hide_icons {
-            if let ROption::RSome(icon) = &_match.icon {
+            if let ROption::RSome(image) = &_match.image {
+                let mut builder = gtk::Image::builder().name(style_names::MATCH);
+
+                match gdk_pixbuf::Pixbuf::from_file_at_size(
+                    image.as_str(),
+                    runtime_data.config.max_image_width,
+                    runtime_data.config.max_image_height,
+                ) {
+                    Ok(pixbuf) => {
+                        builder = builder.pixbuf(&pixbuf);
+                        hbox.add(&builder.build());
+                    }
+                    Err(why) => println!("Failed to load image file: {}", why),
+                }
+            } else if let ROption::RSome(icon) = &_match.icon {
                 let mut builder = gtk::Image::builder()
                     .name(style_names::MATCH)
                     .pixel_size(32);
