@@ -31,6 +31,16 @@ mod scrubber;
 
 const SENSIBLE_TERMINALS: &[&str] = &["alacritty", "foot", "kitty", "wezterm", "wterm"];
 
+// remove arguments since they're not being used
+// https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s07.html
+fn sanitize_exec(exec: &String) -> String {
+    exec.replace("%U", "")
+        .replace("%F", "")
+        .replace("%u", "")
+        .replace("%f", "")
+        .replace(" ", "")
+}
+
 #[handler]
 pub fn handler(selection: Match, state: &State) -> HandleResult {
     let entry = state
@@ -45,21 +55,18 @@ pub fn handler(selection: Match, state: &State) -> HandleResult {
         })
         .unwrap();
 
+    let exec = sanitize_exec(&entry.exec);
+
     if entry.term {
         match &state.config.terminal {
             Some(term) => {
-                if let Err(why) = Command::new(term).arg("-e").arg(&entry.exec).spawn() {
+                if let Err(why) = Command::new(term).arg("-e").arg(&exec).spawn() {
                     eprintln!("Error running desktop entry: {}", why);
                 }
             }
             None => {
                 for term in SENSIBLE_TERMINALS {
-                    if Command::new(term)
-                        .arg("-e")
-                        .arg(&entry.exec)
-                        .spawn()
-                        .is_ok()
-                    {
+                    if Command::new(term).arg("-e").arg(&exec).spawn().is_ok() {
                         break;
                     }
                 }
